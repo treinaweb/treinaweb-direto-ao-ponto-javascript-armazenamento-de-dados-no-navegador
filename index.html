@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script>
+        const CACHE_NAME = 'cache_v1';
+        // caches.open(CACHE_NAME)
+        //     .then((cache) => {
+        //         cache.addAll(['/index.html', '/style.css'])
+        //     })
+
+        const urlToCache = '/index.html';
+        // caches.open(CACHE_NAME)
+        //     .then((cache) => {
+        //         fetch(urlToCache).then((response) => {
+
+        //             cache.put(urlToCache, response.clone())
+        //         })
+
+        //     })
+
+        caches.open(CACHE_NAME)
+            .then((cache) => {
+                const UTL_TO_DELETE = '/index.html';
+                cache.delete(UTL_TO_DELETE)
+                    .then((response) => {
+
+                        if (response) {
+                            console.log(`URL ${UTL_TO_DELETE} foi removida do cahe`)
+                        } else {
+                            console.log(`URL ${UTL_TO_DELETE} não foi encontrada no cache`)
+                        }
+                    })
+            })
+
+    </script>
+</head>
+
+<body>
+    Treinaweb
+</body>
+
+</html>
