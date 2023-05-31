@@ -6,42 +6,144 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <script>
-        const CACHE_NAME = 'cache_v1';
-        // caches.open(CACHE_NAME)
-        //     .then((cache) => {
-        //         cache.addAll(['/index.html', '/style.css'])
-        //     })
 
-        const urlToCache = '/index.html';
-        // caches.open(CACHE_NAME)
-        //     .then((cache) => {
-        //         fetch(urlToCache).then((response) => {
-
-        //             cache.put(urlToCache, response.clone())
-        //         })
-
-        //     })
-
-        caches.open(CACHE_NAME)
-            .then((cache) => {
-                const UTL_TO_DELETE = '/index.html';
-                cache.delete(UTL_TO_DELETE)
-                    .then((response) => {
-
-                        if (response) {
-                            console.log(`URL ${UTL_TO_DELETE} foi removida do cahe`)
-                        } else {
-                            console.log(`URL ${UTL_TO_DELETE} não foi encontrada no cache`)
-                        }
-                    })
-            })
-
-    </script>
 </head>
 
 <body>
     Treinaweb
+    <br />
+    <br />
+    <input type="button" value="buscar todos os livros" onclick="getAllBooks()">
+    <br />
+    <br />
+    <input type="button" value="buscar um livro" onclick="getBook()">
+    <br />
+    <br />
+    <input type="button" value="editar um livro" onclick="editBook()">
+    <br />
+    <br />
+    <input type="button" value="deletar um livro" onclick="deleteBook()">
+    <br />
+    <br />
+    <input type="button" value="criar um livro" onclick="createBook()">
 </body>
+<script>
+    let db;
+
+    const request = indexedDB.open("myDatabase", 1);
+
+    request.onerror = function (event) {
+        console.log("erro ao abrir o DB", event);
+    }
+
+    request.onsuccess = function (event) {
+        db = event.target.result;
+        console.log("Sucesso ao abrir DB", db);
+    }
+
+    request.onupgradeneeded = function (event) {
+        db = event.target.result;
+
+        const booksObjectStore = db.createObjectStore("books", { keyPath: 'isbn' });
+
+        booksObjectStore.createIndex('title', 'title', { unique: true });
+
+        booksObjectStore.createIndex('author', 'author', { unique: false });
+
+        booksObjectStore.transaction.oncomplete = function (event) {
+            const booksData = [
+                { title: "JavaScript: The Good Parts", author: "Douglas Crockford", isbn: "978-0596517748" },
+                { title: "Eloquent JavaScript", author: "Marijn Haverbeke", isbn: "978-1593272821" },
+                { title: "JavaScript: The Definitive Guide", author: "David Flanagan", isbn: "978-0596101992" }
+            ];
+            const booksStoreTransaction = db.transaction("books", 'readwrite');
+            const bookStore = booksStoreTransaction.objectStore('books');
+
+            booksData.forEach((book) => {
+                bookStore.add(book)
+            })
+        }
+
+    }
+
+    function getAllBooks() {
+        const transaction = db.transaction(['books'], 'readwrite')
+        const objectStore = transaction.objectStore('books');
+
+        const getAllRequest = objectStore.getAll()
+
+        getAllRequest.onsuccess = function (event) {
+            const books = event.target.result;
+            console.log(books);
+        }
+
+        getAllRequest.onerror = function (event) {
+            console.log("Erro ao buscar livros", event.target.error);
+        }
+    }
+
+
+    function getBook() {
+        const transaction = db.transaction(['books'], 'readwrite')
+        const objectStore = transaction.objectStore('books');
+
+        const getRequest = objectStore.get('978-0596517748');
+
+        getRequest.onsuccess = function (event) {
+            const book = event.target.result;
+            console.log(book);
+        }
+
+        getRequest.onerror = function (event) {
+            console.log("Erro ao buscar livro", event.target.error);
+        }
+    }
+
+
+    function editBook() {
+        const transaction = db.transaction(['books'], 'readwrite')
+        const objectStore = transaction.objectStore('books');
+
+        const getRequest = objectStore.get('978-0596517748');
+
+        getRequest.onsuccess = function (event) {
+            const book = event.target.result;
+            book.title = 'JavaScript: The Good Parts update';
+            const updateReq = objectStore.put(book);
+
+            updateReq.onsuccess = function (event) {
+                console.log('livro editado com sucesso', event);
+            }
+        }
+
+        getRequest.onerror = function (event) {
+            console.log("Erro ao buscar livro", event.target.error);
+        }
+    }
+
+
+    function deleteBook() {
+        const transaction = db.transaction(['books'], 'readwrite')
+        const objectStore = transaction.objectStore('books');
+        const deleteReq = objectStore.delete('978-0596517748');
+
+        deleteReq.onsuccess = function (event) {
+            console.log("livro deletado com sucesso", event.target);
+        }
+    }
+
+    function createBook() {
+        const transaction = db.transaction(['books'], 'readwrite');
+        const objectStore = transaction.objectStore('books');
+
+        const book = { title: "TypeScript: The Definitive Guide", author: "Ariel Sardinha", isbn: "978-0596101123" }
+
+        const addReq = objectStore.add(book);
+
+        addReq.onsuccess = function (event) {
+            console.log("livro foi adicionado com sucesso", event.target);
+        }
+    }
+</script>
 
 </html>
