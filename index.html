@@ -13,136 +13,67 @@
     Treinaweb
     <br />
     <br />
-    <input type="button" value="buscar todos os livros" onclick="getAllBooks()">
+    <input type="button" value="criar arquivo" onclick="createFile()">
     <br />
     <br />
-    <input type="button" value="buscar um livro" onclick="getBook()">
+    <input type="button" value="ler arquivo" onclick="readFile()">
     <br />
     <br />
-    <input type="button" value="editar um livro" onclick="editBook()">
+    <input type="button" value="editar arquivo" onclick="editFile()">
     <br />
     <br />
-    <input type="button" value="deletar um livro" onclick="deleteBook()">
-    <br />
-    <br />
-    <input type="button" value="criar um livro" onclick="createBook()">
+    <input type="button" value="deletar arquivo" onclick="deleteFile()">
 </body>
+
 <script>
-    let db;
+    async function createFile() {
+        const rootHandle = await navigator.storage.getDirectory();
 
-    const request = indexedDB.open("myDatabase", 1);
+        const fileHandle = await rootHandle.getFileHandle("exemple.txt", { create: true });
 
-    request.onerror = function (event) {
-        console.log("erro ao abrir o DB", event);
+        const text = prompt("Digite o texto para o novo arquivo");
+
+        const writable = await fileHandle.createWritable();
+        await writable.write(text);
+        await writable.close();
+
+        console.log("arquivo criado com sucesso!");
     }
 
-    request.onsuccess = function (event) {
-        db = event.target.result;
-        console.log("Sucesso ao abrir DB", db);
-    }
+    async function readFile() {
+        const rootHandle = await navigator.storage.getDirectory();
+        const fileHandle = await rootHandle.getFileHandle("exemple.txt");
 
-    request.onupgradeneeded = function (event) {
-        db = event.target.result;
-
-        const booksObjectStore = db.createObjectStore("books", { keyPath: 'isbn' });
-
-        booksObjectStore.createIndex('title', 'title', { unique: true });
-
-        booksObjectStore.createIndex('author', 'author', { unique: false });
-
-        booksObjectStore.transaction.oncomplete = function (event) {
-            const booksData = [
-                { title: "JavaScript: The Good Parts", author: "Douglas Crockford", isbn: "978-0596517748" },
-                { title: "Eloquent JavaScript", author: "Marijn Haverbeke", isbn: "978-1593272821" },
-                { title: "JavaScript: The Definitive Guide", author: "David Flanagan", isbn: "978-0596101992" }
-            ];
-            const booksStoreTransaction = db.transaction("books", 'readwrite');
-            const bookStore = booksStoreTransaction.objectStore('books');
-
-            booksData.forEach((book) => {
-                bookStore.add(book)
-            })
-        }
-
-    }
-
-    function getAllBooks() {
-        const transaction = db.transaction(['books'], 'readwrite')
-        const objectStore = transaction.objectStore('books');
-
-        const getAllRequest = objectStore.getAll()
-
-        getAllRequest.onsuccess = function (event) {
-            const books = event.target.result;
-            console.log(books);
-        }
-
-        getAllRequest.onerror = function (event) {
-            console.log("Erro ao buscar livros", event.target.error);
-        }
+        const file = await fileHandle.getFile();
+        const text = await file.text();
+        console.log(text);
     }
 
 
-    function getBook() {
-        const transaction = db.transaction(['books'], 'readwrite')
-        const objectStore = transaction.objectStore('books');
+    async function editFile() {
+        const rootHandle = await navigator.storage.getDirectory();
+        const fileHandle = await rootHandle.getFileHandle("exemple.txt");
 
-        const getRequest = objectStore.get('978-0596517748');
+        const file = await fileHandle.getFile();
+        const text = await file.text();
 
-        getRequest.onsuccess = function (event) {
-            const book = event.target.result;
-            console.log(book);
-        }
+        const newText = prompt("Digite o novo texto do arquivi", text);
 
-        getRequest.onerror = function (event) {
-            console.log("Erro ao buscar livro", event.target.error);
-        }
-    }
-
-
-    function editBook() {
-        const transaction = db.transaction(['books'], 'readwrite')
-        const objectStore = transaction.objectStore('books');
-
-        const getRequest = objectStore.get('978-0596517748');
-
-        getRequest.onsuccess = function (event) {
-            const book = event.target.result;
-            book.title = 'JavaScript: The Good Parts update';
-            const updateReq = objectStore.put(book);
-
-            updateReq.onsuccess = function (event) {
-                console.log('livro editado com sucesso', event);
-            }
-        }
-
-        getRequest.onerror = function (event) {
-            console.log("Erro ao buscar livro", event.target.error);
+        if (newText != null) {
+            const writable = await fileHandle.createWritable();
+            await writable.write(newText);
+            await writable.close();
+            console.log("Arquivo editado com sucesso!");
+        } else {
+            console.log("Edição do arquivo cancelada")
         }
     }
 
+    async function deleteFile() {
+        const rootHandle = await navigator.storage.getDirectory();
 
-    function deleteBook() {
-        const transaction = db.transaction(['books'], 'readwrite')
-        const objectStore = transaction.objectStore('books');
-        const deleteReq = objectStore.delete('978-0596517748');
-
-        deleteReq.onsuccess = function (event) {
-            console.log("livro deletado com sucesso", event.target);
-        }
-    }
-
-    function createBook() {
-        const transaction = db.transaction(['books'], 'readwrite');
-        const objectStore = transaction.objectStore('books');
-
-        const book = { title: "TypeScript: The Definitive Guide", author: "Ariel Sardinha", isbn: "978-0596101123" }
-
-        const addReq = objectStore.add(book);
-
-        addReq.onsuccess = function (event) {
-            console.log("livro foi adicionado com sucesso", event.target);
-        }
+        await rootHandle.removeEntry("exemple.txt");
+        console.log("Arquivo deletado com sucesso");
     }
 </script>
 
