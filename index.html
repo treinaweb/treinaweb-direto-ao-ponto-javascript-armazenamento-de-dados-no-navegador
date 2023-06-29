@@ -14,6 +14,9 @@
     <br />
     <br />
     <input type="button" value="buscar todos os livros" onclick="getAllBooks()">
+    <br />
+    <br />
+    <input type="button" value="adicionar um livro" onclick="createBook()">
 </body>
 
 <script>
@@ -72,7 +75,19 @@
         }
     }
 
+    function createBook() {
+        const transaction = db.transaction(['books'], 'readwrite');
 
+        const objectStore = transaction.objectStore('books');
+
+        const book = { title: "TypeScript: The Definitive Guide", author: "Ariel Sardinha", isbn: "978-0596101123" }
+        const addReq = objectStore.add(book);
+
+        addReq.onsuccess = function (event) {
+            console.log("O livro foi adicionado com sucesso", event.target);
+        }
+
+    }
 
 </script>
 
