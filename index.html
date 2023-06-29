@@ -11,70 +11,47 @@
 
 <body>
     Treinaweb
-    <br />
-    <br />
-    <input type="button" value="criar arquivo" onclick="createFile()">
-    <br />
-    <br />
-    <input type="button" value="ler arquivo" onclick="readFile()">
-    <br />
-    <br />
-    <input type="button" value="editar arquivo" onclick="editFile()">
-    <br />
-    <br />
-    <input type="button" value="deletar arquivo" onclick="deleteFile()">
 </body>
 
 <script>
-    async function createFile() {
-        const rootHandle = await navigator.storage.getDirectory();
+    let db;
+    const request = indexedDB.open('myDatabase', 1)
 
-        const fileHandle = await rootHandle.getFileHandle("exemple.txt", { create: true });
-
-        const text = prompt("Digite o texto para o novo arquivo");
-
-        const writable = await fileHandle.createWritable();
-        await writable.write(text);
-        await writable.close();
-
-        console.log("arquivo criado com sucesso!");
+    request.onerror = function (event) {
+        console.log("Erro ao abrir o banco de dados", event);
     }
 
-    async function readFile() {
-        const rootHandle = await navigator.storage.getDirectory();
-        const fileHandle = await rootHandle.getFileHandle("exemple.txt");
-
-        const file = await fileHandle.getFile();
-        const text = await file.text();
-        console.log(text);
+    request.onsuccess = function (event) {
+        db = event.target.result;
+        console.log("Sucesso ao abrir o banco de dados", db);
     }
 
+    request.onupgradeneeded = function (event) {
+        db = event.target.result;
 
-    async function editFile() {
-        const rootHandle = await navigator.storage.getDirectory();
-        const fileHandle = await rootHandle.getFileHandle("exemple.txt");
+        const booksObjectStore = db.createObjectStore("books", { keyPath: 'isbn' });
 
-        const file = await fileHandle.getFile();
-        const text = await file.text();
+        booksObjectStore.createIndex('title', 'title', { unique: true });
+        booksObjectStore.createIndex('author', 'author', { unique: false });
 
-        const newText = prompt("Digite o novo texto do arquivi", text);
+        booksObjectStore.transaction.oncomplete = function (event) {
+            const booksData = [
+                { title: "JavaScript: The Good Parts", author: "Douglas Crockford", isbn: "978-0596517748" },
+                { title: "Eloquent JavaScript", author: "Marijn Haverbeke", isbn: "978-1593272821" },
+                { title: "JavaScript: The Definitive Guide", author: "David Flanagan", isbn: "978-0596101992" }
+            ]
 
-        if (newText != null) {
-            const writable = await fileHandle.createWritable();
-            await writable.write(newText);
-            await writable.close();
-            console.log("Arquivo editado com sucesso!");
-        } else {
-            console.log("Edição do arquivo cancelada")
+
+            const booksStoreTransaction = db.transaction('books', 'readwrite');
+            const bookStore = booksStoreTransaction.objectStore('books');
+
+            booksData.forEach(function (book) {
+                bookStore.add(book);
+            });
         }
+
     }
 
-    async function deleteFile() {
-        const rootHandle = await navigator.storage.getDirectory();
-
-        await rootHandle.removeEntry("exemple.txt");
-        console.log("Arquivo deletado com sucesso");
-    }
 </script>
 
 </html>
