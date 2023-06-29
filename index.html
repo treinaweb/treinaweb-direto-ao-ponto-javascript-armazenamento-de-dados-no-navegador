@@ -17,6 +17,9 @@
     <br />
     <br />
     <input type="button" value="adicionar um livro" onclick="createBook()">
+    <br />
+    <br />
+    <input type="button" value="editar um livro" onclick="editBook()">
 </body>
 
 <script>
@@ -88,6 +91,24 @@
         }
 
     }
+
+    function editBook() {
+        const transaction = db.transaction(['books'], 'readwrite');
+        const objectStore = transaction.objectStore('books');
+
+        const getReq = objectStore.get('978-1593272821');
+
+        getReq.onsuccess = function (event) {
+            const book = event.target.result;
+            book.title = "Eloquent JavaScript V2";
+            const updateReq = objectStore.put(book);
+
+            updateReq.onsuccess = function (event) {
+                console.log("Livro editado com sucesso", event);
+            }
+        }
+    }
+
 
 </script>
 
