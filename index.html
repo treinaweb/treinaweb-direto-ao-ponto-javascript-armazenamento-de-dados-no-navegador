@@ -11,6 +11,9 @@
 
 <body>
     Treinaweb
+    <br />
+    <br />
+    <input type="button" value="buscar todos os livros" onclick="getAllBooks()">
 </body>
 
 <script>
@@ -51,6 +54,25 @@
         }
 
     }
+
+    function getAllBooks() {
+        const transaction = db.transaction(['books']);
+
+        const objectStore = transaction.objectStore('books');
+
+        const getAllRequest = objectStore.getAll();
+
+        getAllRequest.onsuccess = function (event) {
+            const books = event.target.result;
+            console.log(books);
+        }
+
+        getAllRequest.onerror = function (event) {
+            console.log("Erro ao buscar livros", event.target.error);
+        }
+    }
+
+
 
 </script>
 
