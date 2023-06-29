@@ -20,6 +20,9 @@
     <br />
     <br />
     <input type="button" value="editar um livro" onclick="editBook()">
+    <br />
+    <br />
+    <input type="button" value="deletar um livro" onclick="deleteBook()">
 </body>
 
 <script>
@@ -109,7 +112,16 @@
         }
     }
 
+    function deleteBook() {
+        const transaction = db.transaction(['books'], 'readwrite');
 
+        const objectStore = transaction.objectStore('books');
+        const deleteReq = objectStore.delete('978-0596101123');
+
+        deleteReq.onsuccess = function (event) {
+            console.log("Livro deletado com sucesso", event.target);
+        }
+    }
 </script>
 
 </html>
